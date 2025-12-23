@@ -1,0 +1,22 @@
+{
+  "name": "generic-jeopardy-frontend",
+  "version": "1.0.0",
+  "description": "A dynamic Jeopardy game frontend with customizable questions",
+  "main": "index.html",
+  "scripts": {
+    "start": "python3 -m http.server 8000",
+    "test": "echo \"No tests configured yet\""
+  },
+  "keywords": [
+    "jeopardy",
+    "game",
+    "quiz",
+    "frontend"
+  ],
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ramdesh/generic-jeopardy-frontend"
+  }
+}
