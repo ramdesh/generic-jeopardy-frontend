@@ -1,0 +1,23 @@
+{
+    "Harry Potter Movies": {
+        "100": {
+            "question": "This alley is where Ollivanders wand shop is located.",
+            "answer": "What is Diagon Alley"
+        },
+        "200": {
+            "question": "This house at Hogwarts is known for bravery and courage.",
+            "answer": "What is Gryffindor"
+        },
+        "300": {
+            "question": "This creature guards the entrance to the Chamber of Secrets.",
+            "answer": "What is a Basilisk"
+        },
+        "400": {
+            "question": "This thief stole Hufflepuff's cup from Number 12 Grimmauld Place.",
+            "answer": "Who is Mundungus Fletcher"
+        },
+        "500": {
+            "question": "This potion grants the drinker luck for a period of time.",
+            "answer": "What is Felix Felicis"   
+    }
+}

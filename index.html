@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jeopardy Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #0d0221 0%, #1a0033 100%);
+            color: white;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 3em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            color: #ffd700;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .category {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .category-title {
+            background: #003f87;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.2em;
+            border: 2px solid #0066cc;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+        }
+
+        .question-card {
+            aspect-ratio: 1;
+            background: linear-gradient(135deg, #1a0a4d 0%, #2d1b69 100%);
+            border: 3px solid #ffd700;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-size: 1.8em;
+            transition: all 0.3s ease;
+            position: relative;
+            transform-style: preserve-3d;
+        }
+
+        .question-card:hover:not(.used) {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+        }
+
+        .question-card.used {
+            background: linear-gradient(135deg, #333 0%, #555 100%);
+            border-color: #777;
+            color: #888;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .question-card.used::after {
+            content: '✓';
+            font-size: 3em;
+            position: absolute;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal.show {
+            display: flex;
+            opacity: 1;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #1a0a4d 0%, #2d1b69 100%);
+            border: 3px solid #ffd700;
+            padding: 40px;
+            border-radius: 12px;
+            max-width: 600px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.4);
+            perspective: 1000px;
+        }
+
+        .flip-card {
+            width: 100%;
+            height: 400px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+            cursor: pointer;
+        }
+
+        .flip-card.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .flip-card-front,
+        .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-radius: 8px;
+            font-size: 1.8em;
+            padding: 30px;
+        }
+
+        .flip-card-front {
+            background: linear-gradient(135deg, #003f87 0%, #0066cc 100%);
+            border: 2px solid #ffd700;
+        }
+
+        .flip-card-back {
+            background: linear-gradient(135deg, #006633 0%, #009944 100%);
+            border: 2px solid #ffd700;
+            transform: rotateY(180deg);
+        }
+
+        .flip-card-front .value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #ffd700;
+            margin-bottom: 20px;
+        }
+
+        .flip-card-front .label {
+            font-size: 1em;
+            opacity: 0.7;
+            margin-top: 20px;
+        }
+
+        .flip-card-back .answer-text {
+            font-weight: bold;
+            color: #ffd700;
+        }
+
+        .modal-controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            font-size: 1em;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+        }
+
+        .btn-primary {
+            background: #ffd700;
+            color: #000;
+        }
+
+        .btn-primary:hover {
+            background: #ffed4e;
+            transform: scale(1.05);
+        }
+
+        .btn-secondary {
+            background: #003f87;
+            color: #ffd700;
+            border: 2px solid #ffd700;
+        }
+
+        .btn-secondary:hover {
+            background: #0066cc;
+        }
+
+        .modal-value {
+            font-size: 1.5em;
+            color: #ffd700;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+
+        .reset-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 24px;
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+
+        .reset-btn:hover {
+            background: #ff5252;
+            transform: scale(1.05);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 1.2em;
+        }
+
+        @media (max-width: 768px) {
+            .board {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+
+            .question-card {
+                font-size: 1.2em;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+
+            .modal-content {
+                padding: 20px;
+            }
+
+            .flip-card {
+                height: 300px;
+            }
+
+            .flip-card-front .value {
+                font-size: 2em;
+            }
+
+            .flip-card-front,
+            .flip-card-back {
+                font-size: 1.3em;
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Jeopardy!</h1>
+        <div id="board" class="board"></div>
+    </div>
+
+    <button class="reset-btn" onclick="resetGame()">Reset Game</button>
+
+    <!-- Modal for Question Display -->
+    <div id="questionModal" class="modal">
+        <div class="modal-content">
+            <div class="flip-card" id="flipCard" onclick="toggleFlip()">
+                <div class="flip-card-front">
+                    <div class="value" id="questionValue"></div>
+                    <div id="questionText"></div>
+                    <div class="label">Click to reveal answer</div>
+                </div>
+                <div class="flip-card-back">
+                    <div class="answer-text" id="answerText"></div>
+                    <div class="label">Click to flip back</div>
+                </div>
+            </div>
+            <div class="modal-value">Value: $<span id="modalValue"></span></div>
+            <div class="modal-controls">
+                <button class="btn btn-primary" onclick="markAnsweredAndClose()">Mark as Answered</button>
+                <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Questions data - embed directly to avoid CORS issues
+        let questions = {
+            "Harry Potter": {
+                "100": {
+                    "question": "This house at Hogwarts is known for bravery and courage, and is the house of Harry Potter.",
+                    "answer": "What is Gryffindor"
+                },
+                "200": {
+                    "question": "This alley is where Ollivanders wand shop is located.",
+                    "answer": "What is Diagon Alley"
+                },
+                "300": {
+                    "question": "This creature guards the entrance to trapdoor that leads to the Philosopher's Stone.",
+                    "answer": "What is Fluffy (the three-headed dog)"
+                },
+                "400": {
+                    "question": "This thief stole Hufflepuff's cup from Number 12 Grimmauld Place.",
+                    "answer": "Who is Mundungus Fletcher"
+                },
+                "500": {
+                    "question": "This potion grants the drinker luck for a period of time.",
+                    "answer": "What is Felix Felicis"
+                }
+            },
+            "Christmas Movies": {
+                "100": {
+                    "question": "In this movie, a young boy must protect his home from burglars after being left behind by his family.",
+                    "answer": "What is Home Alone"
+                },
+                "200": {
+                    "question": "This movie features a father trying to buy an action figure for his son on Christmas Eve.",
+                    "answer": "What is Jingle All the Way"
+                },
+                "300": {
+                    "question": "In this film, a cynical businessman is visited by three ghosts on Christmas Eve.",
+                    "answer": "What is A Christmas Carol"
+                },
+                "400": {
+                    "question": "This drink is featured heavily in this animated movie about a magical train ride to the North Pole.",
+                    "answer": "What is hot chocolate"
+                },
+                "500": {
+                    "question": "This character from a Tim Burton movie tries to take over Christmas.",
+                    "answer": "Who is the pumpkin king (Jack Skellington)"
+                }
+            },
+            "Christmas Songs": {
+                "100": {
+                    "question": "This is the name of Santa's reindeer with a glowing red nose.",
+                    "answer": "Who is Rudolph"
+                },
+                "200": {
+                    "question": "This is what the singer brought for popping when it is snowing outside",
+                    "answer": "What is corn"
+                },
+                "300": {
+                    "question": "This is what presumably had magic in it to make frosty the snowman come to life.",
+                    "answer": "What is an old silk hat"
+                },
+                "400": {
+                    "question": "This is the Christmas song that has been translated into the most languages worldwide.",
+                    "answer": "What is Silent Night"
+                },
+                "500": {
+                    "question": "These two animals keep time with the little drummer boy.",
+                    "answer": "Who are the ox and lamb"
+                }
+            },
+            "Yule": {
+                "100": {
+                    "question": "Yule is celebrated around this time of year, marking the winter solstice.",
+                    "answer": "What is December 21 - 25"
+                },
+                "200": {
+                    "question": "This is the final day of Yuletide celebrations, often marked by feasting and gatherings.",
+                    "answer": "What is New Year's Eve (or Twelfth Night)"
+                },
+                "300": {
+                    "question": "These decorations related to Yule were traditionally worn on the head or around the waist",
+                    "answer": "What are wreaths or garlands"
+                },
+                "400": {
+                    "question": "This planet was associated with the pagan celebrations that Roman cultures held around the time of Yule.",
+                    "answer": "What is Saturn"
+                },
+                "500": {
+                    "question": "This Norse god was killed by a prick from a mistletoe-tipped arrow during the Yule season.",
+                    "answer": "Who is Balder"
+                }
+            },
+            "Christmas Maths": {
+                "100": {
+                    "question": "If you have 3 stockings with 5 gifts each, how many gifts do you have in total?",
+                    "answer": "What is 15"
+                },
+                "200": {
+                    "question": "A Christmas tree costs $50 and you get a 20% discount. What is the final price?",
+                    "answer": "What is $40"
+                },
+                "300": {
+                    "question": "If Santa delivers 1 billion gifts in 24 hours, how many hours would it take to deliver 1 trillion gifts at the same rate?",
+                    "answer": "What is 24,000 hours (or 1000 days)"
+                },
+                "400": {
+                    "question": "How many drummers are drumming in total in the song 'The Twelve Days of Christmas'?",
+                    "answer": "How many is 12"
+                },
+                "500": {
+                    "question": "A snow globe is on sale for 35% off its original price of $80. What is the sale price?",
+                    "answer": "What is $52"
+                }
+            },
+            "Christmas Science": {
+                "100": {
+                    "question": "Snow forms when water vapor freezes in clouds at temperatures below this Celsius value.",
+                    "answer": "What is 0 degrees Celsius"
+                },
+                "200": {
+                    "question": "This gas makes up about 96% of dry ice, which is used for dramatic Christmas decorations.",
+                    "answer": "What is carbon dioxide (CO2)"
+                },
+                "300": {
+                    "question": "Pine and spruce trees stay green year-round because of these waxy substances on their needles.",
+                    "answer": "What is a waxy cuticle (or resin)"
+                },
+                "400": {
+                    "question": "This phenomenon causes the bright colors seen in Christmas lights through the emission of light from excited atoms.",
+                    "answer": "What is phosphorescence (or fluorescence)"
+                },
+                "500": {
+                    "question": "The twinkling effect of stars, especially noticeable on clear winter nights, is caused by this atmospheric effect.",
+                    "answer": "What is atmospheric refraction (or turbulence)"
+                }
+            }
+        };
+        let usedQuestions = new Set();
+
+        // Initialize the game
+        function loadQuestions() {
+            renderBoard();
+        }
+
+        // Render the game board
+        function renderBoard() {
+            const board = document.getElementById('board');
+            board.innerHTML = '';
+
+            for (const category in questions) {
+                const categoryDiv = document.createElement('div');
+                categoryDiv.className = 'category';
+
+                const titleDiv = document.createElement('div');
+                titleDiv.className = 'category-title';
+                titleDiv.textContent = category;
+                categoryDiv.appendChild(titleDiv);
+
+                const questionsData = questions[category];
+                const values = Object.keys(questionsData).sort((a, b) => parseInt(a) - parseInt(b));
+
+                for (const value of values) {
+                    const card = document.createElement('div');
+                    card.className = 'question-card';
+                    const questionKey = `${category}-${value}`;
+                    
+                    if (usedQuestions.has(questionKey)) {
+                        card.classList.add('used');
+                        card.textContent = '';
+                    } else {
+                        card.textContent = `$${value}`;
+                        card.onclick = () => openQuestion(category, value, questionKey);
+                    }
+                    
+                    categoryDiv.appendChild(card);
+                }
+
+                board.appendChild(categoryDiv);
+            }
+        }
+
+        // Open question modal
+        function openQuestion(category, value, questionKey) {
+            const questionData = questions[category][value];
+            document.getElementById('questionValue').textContent = `$${value}`;
+            document.getElementById('questionText').textContent = questionData.question;
+            document.getElementById('answerText').textContent = questionData.answer;
+            document.getElementById('modalValue').textContent = value;
+            
+            // Reset flip state
+            const flipCard = document.getElementById('flipCard');
+            flipCard.classList.remove('flipped');
+            
+            // Store current question key for marking answered
+            document.getElementById('questionModal').dataset.currentQuestion = questionKey;
+            
+            document.getElementById('questionModal').classList.add('show');
+        }
+
+        // Toggle flip on click
+        function toggleFlip() {
+            const flipCard = document.getElementById('flipCard');
+            flipCard.classList.toggle('flipped');
+        }
+
+        // Mark question as answered and close
+        function markAnsweredAndClose() {
+            const questionKey = document.getElementById('questionModal').dataset.currentQuestion;
+            usedQuestions.add(questionKey);
+            closeModal();
+            renderBoard();
+        }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('questionModal').classList.remove('show');
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('questionModal').addEventListener('click', function(event) {
+            if (event.target === this) {
+                closeModal();
+            }
+        });
+
+        // Reset entire game
+        function resetGame() {
+            if (confirm('Are you sure you want to reset the game? All progress will be lost.')) {
+                usedQuestions.clear();
+                renderBoard();
+            }
+        }
+
+        // Load questions on page load
+        loadQuestions();
+    </script>
+</body>
+</html>
