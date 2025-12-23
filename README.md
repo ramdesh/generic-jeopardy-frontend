@@ -60,10 +60,11 @@ Edit `questions.json` to add your own categories and questions. The format is:
 
 This project is configured to deploy automatically to GitHub Pages.
 
-1. Ensure your repository is public
-2. Go to Settings → Pages
-3. Set the source to `main` branch
-4. Your site will be available at `https://your-username.github.io/generic-jeopardy-frontend`
+1. Fork this repo and modify the questions in `questions.json`
+2. Ensure your repository is public
+3. Go to Settings → Pages
+4. Set the source to `main` branch
+5. Your site will be available at `https://your-username.github.io/generic-jeopardy-frontend`
 
 ### Local Deployment
 
